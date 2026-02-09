@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +29,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = \auth()->user();
+
+        if ($user && $user->hasRole(UserRole::ADMIN)) {
+            return redirect('/admin');
+            // or route('filament.admin.pages.dashboard')
+        }
+
+        return redirect()->route('dashboard');
+
+//        if ($user && $user->hasRole(UserRole::ADMIN)) {
+//            return redirect()->to('/admin');
+//        }
+//
+//        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

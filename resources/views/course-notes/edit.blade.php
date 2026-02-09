@@ -28,7 +28,7 @@
                 <input name="title" value="{{ old('title', $note->title) }}" placeholder="Title (optional)"
                        class="w-full rounded border-gray-300" />
 
-                <textarea id="note-content" name="content" class="w-full">{{ old('content', $note->content) }}</textarea>
+                <textarea id="editor-content" name="content" class="w-full">{{ old('content', $note->content) }}</textarea>
 
                 @error('content') <div class="text-sm text-red-600">{{ $message }}</div> @enderror
 

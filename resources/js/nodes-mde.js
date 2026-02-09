@@ -2,7 +2,7 @@ import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const el = document.querySelector("#note-content");
+    const el = document.querySelector("#editor-content");
     if (!el) return;
 
     new EasyMDE({

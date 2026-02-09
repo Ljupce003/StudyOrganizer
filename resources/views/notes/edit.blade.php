@@ -30,7 +30,7 @@
             />
 
             <textarea
-                id="note-content"
+                id="editor-content"
                 name="content"
                 class="w-full"
             >{{ old('content', $note->content) }}</textarea>

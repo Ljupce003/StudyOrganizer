@@ -17,13 +17,17 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->count(2)->student()->create();
+        User::factory()->count(1)->student()->create();
         User::factory()->student()->create([
             'email' => "s@ex.com",
             'name' => "Student User"
         ]);
+        User::factory()->student()->create([
+            'email' => "s1@ex.com",
+            'name' => "Student User 1"
+        ]);
 
-        User::factory()->count(2)->professor()->create();
+        User::factory()->count(1)->professor()->create();
         User::factory()->professor()->create([
                 'email' => "p@ex.com",
                 'name' => "Professor User"

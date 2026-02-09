@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\AssignmentSubmissionController;
 use App\Http\Controllers\CourseAssignmentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseNoteController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubmissionGradingController;
 use App\Livewire\Notes\CreateCourseNote;
 use App\Livewire\Notes\CreateGlobalNote;
 use App\Livewire\Notes\EditCourseNote;
@@ -30,12 +32,19 @@ Route::middleware('auth')->group(function () {
     Route::resource("courses.notes", CourseNoteController::class)->except(['index', 'show']);
 
     Route::resource("course.assignments", CourseAssignmentController::class);
+    Route::resource("course.assignments.submissions", AssignmentSubmissionController::class);
 
-//    Route::get('/notes/create', CreateGlobalNote::class)->name('notes.create');
-//    Route::get('/notes/{note}/edit', EditGlobalNote::class)->name('notes.edit');
-//
-//    Route::get('/courses/{course}/notes/create', CreateCourseNote::class)->name('courses.notes.create');
-//    Route::get('/courses/{course}/notes/{note}/edit', EditCourseNote::class)->name('courses.notes.edit');
+
+    Route::get(
+        'course/{course}/assignments/{assignment}/submissions/{submission}/grade',
+        [SubmissionGradingController::class, 'edit']
+    )->name('course.assignments.submissions.grade.edit');
+
+    Route::put(
+        'course/{course}/assignments/{assignment}/submissions/{submission}/grade',
+        [SubmissionGradingController::class, 'update']
+    )->name('course.assignments.submissions.grade.update');
+
 });
 
 require __DIR__.'/auth.php';

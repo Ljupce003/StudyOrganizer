@@ -20,7 +20,7 @@ class SubmissionFactory extends Factory
     public function definition(): array
     {
 
-        $submittedAt = $this->faker->optional(0.85)->dateTimeBetween('-30 days', 'now'); // 85% submitted
+        $submittedAt = $this->faker->dateTimeBetween('-30 days', 'now'); // 85% submitted
 
         $isGraded = $submittedAt && $this->faker->boolean(65); // only graded if submitted, 65% chance
 

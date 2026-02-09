@@ -12,6 +12,11 @@ class Submission extends Model
 
     use HasFactory;
 
+    protected $guarded = [
+        'id',
+        'created_at'
+    ];
+
     protected $casts = [
         'submitted_at' => 'datetime',
         'graded_at' => 'datetime',
@@ -25,5 +30,10 @@ class Submission extends Model
     public function grader(): BelongsTo
     {
         return $this->belongsTo(User::class,"graded_by");
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(User::class,"student_id");
     }
 }

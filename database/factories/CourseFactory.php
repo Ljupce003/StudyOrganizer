@@ -2,12 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Course>
+ * @extends Factory<Course>
  */
 class CourseFactory extends Factory
 {
@@ -36,7 +37,7 @@ class CourseFactory extends Factory
             'is_active' => true,
 
             // assumes at least one user exists (admin/professor)
-            'created_by' => User::query()->inRandomOrder()->value('id'),
+            'created_by' => User::query()->where("users.role",UserRole::ADMIN)->inRandomOrder()->value('id'),
         ];
     }
 }

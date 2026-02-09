@@ -13,6 +13,19 @@ class Assignment extends Model
 
     use HasFactory;
 
+    protected $fillable = [
+        'title',
+        'description',
+        'max_points',
+        'number_attempts',
+        'grading_strategy',
+        'due_at',
+        'allow_late',
+        'is_published',
+        'course_id',
+        'created_by',
+    ];
+
     protected $casts = [
         'due_at' => 'datetime',
     ];

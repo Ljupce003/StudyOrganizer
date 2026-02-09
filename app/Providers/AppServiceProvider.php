@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Models\Course;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -31,10 +32,19 @@ class AppServiceProvider extends ServiceProvider
             $currentCourse = null;
 
             if ($user) {
-                $sidebarCourses = $user->courses()
-                    ->select('courses.id', 'courses.short_name')
-                    ->orderBy('short_name')
-                    ->get();
+                if($user->hasRole(UserRole::PROFESSOR)){
+                    $sidebarCourses = $user->teachingCourses()
+                        ->select('courses.id', 'courses.short_name')
+                        ->orderBy('short_name')
+                        ->get();
+                }
+                else{
+                    $sidebarCourses = $user->courses()
+                        ->select('courses.id', 'courses.short_name')
+                        ->orderBy('short_name')
+                        ->get();
+                }
+
 
                 // Global notes only (course_id null)
                 $sidebarGlobalNotes = $user->notes()

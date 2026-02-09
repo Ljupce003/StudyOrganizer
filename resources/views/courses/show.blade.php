@@ -51,15 +51,15 @@
                     <h3 class="text-lg font-semibold text-gray-800">Assignments</h3>
 
                     {{-- Later show only to professors/admin --}}
-                    @if(false)
-                        <button
+                    @if(true)
+                        <a
+                            href="{{ route("course.assignments.create",[$course]) }}"
                             type="button"
-                            class="inline-flex items-center px-3 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-700 opacity-50 cursor-not-allowed"
-                            disabled
+                            class="inline-flex items-center px-3 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-700 opacity-70 cursor-pointer"
                             title="Coming soon"
                         >
                             + New
-                        </button>
+                        </a>
                     @endif
 
                 </div>
