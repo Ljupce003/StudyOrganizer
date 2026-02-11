@@ -26,7 +26,7 @@
 
                     <div class="flex items-center gap-2">
                         <a
-                            href="{{ route('courses.show', $course) }}"
+                            href="{{ route('course.show', $course) }}"
                             class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                             Cancel
@@ -59,10 +59,10 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Description</label>
                         <textarea
+                            id="editor-content"
                             name="description"
                             rows="7"
                             class="mt-1 w-full rounded-md border-gray-300 focus:border-gray-500 focus:ring-gray-500"
-                            required
                         >{{ old('description') }}</textarea>
                         @error('description') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                     </div>

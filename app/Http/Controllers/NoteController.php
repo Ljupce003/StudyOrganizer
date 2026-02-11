@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class NoteController extends Controller
 {
@@ -58,7 +59,10 @@ class NoteController extends Controller
      */
     public function edit(Note $note)
     {
-        if ($note->user_id !== auth()->id() || $note->course_id !== null) abort(404);
+
+        Gate::authorize('update', $note);
+
+//        if ($note->user_id !== auth()->id() || $note->course_id !== null) abort(404);
         return view('notes.edit', compact('note'));
     }
 
@@ -67,8 +71,10 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note)
     {
+
+        Gate::authorize('update', $note);
         //
-        if ($note->user_id !== auth()->id() || $note->course_id !== null) abort(404);
+//        if ($note->user_id !== auth()->id() || $note->course_id !== null) abort(404);
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
@@ -85,7 +91,10 @@ class NoteController extends Controller
      */
     public function destroy(Note $note)
     {
-        if ($note->user_id !== auth()->id() || $note->course_id !== null) abort(404);
+//        if ($note->user_id !== auth()->id() || $note->course_id !== null) abort(404);
+
+
+        Gate::authorize('update', $note);
 
         $note->delete();
 

@@ -1,3 +1,4 @@
+@php use App\Models\Assignment; @endphp
 {{--<x-app-layout>--}}
 <x-layouts.app-with-sidebar :course="$course">
     {{--        <x-slot name="header">--}}
@@ -51,7 +52,7 @@
                     <h3 class="text-lg font-semibold text-gray-800">Assignments</h3>
 
                     {{-- Later show only to professors/admin --}}
-                    @if(true)
+                    @can('create',Assignment::class)
                         <a
                             href="{{ route("course.assignments.create",[$course]) }}"
                             type="button"
@@ -60,7 +61,7 @@
                         >
                             + New
                         </a>
-                    @endif
+                    @endcan
 
                 </div>
 

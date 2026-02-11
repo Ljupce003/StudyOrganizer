@@ -4,7 +4,7 @@
             <h1 class="text-xl font-semibold mb-1">New Course Note</h1>
             <div class="text-sm text-gray-500 mb-4">{{ $course->short_name }}</div>
 
-            <form method="POST" action="{{ route('courses.notes.store', $course) }}" class="space-y-4">
+            <form method="POST" action="{{ route('course.notes.store', $course) }}" class="space-y-4">
                 @csrf
 
                 <input name="title" value="{{ old('title') }}" placeholder="Title (optional)"

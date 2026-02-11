@@ -36,4 +36,12 @@ class Submission extends Model
     {
         return $this->belongsTo(User::class,"student_id");
     }
+
+    function isGraded(): bool
+    {
+        return $this->grade !== null
+            || $this->feedback !== null
+            || $this->graded_at !== null
+            || $this->graded_by !== null;
+    }
 }

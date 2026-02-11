@@ -7,7 +7,7 @@
                     <div class="text-sm text-gray-500">{{ $course->short_name }}</div>
                 </div>
 
-                <form method="POST" action="{{ route('courses.notes.destroy', [$course, $note]) }}"
+                <form method="POST" action="{{ route('course.notes.destroy', [$course, $note]) }}"
                       onsubmit="return confirm('Delete this note?')">
                     @csrf
                     @method('DELETE')
@@ -21,7 +21,7 @@
                 <div class="mb-3 text-sm text-green-700">{{ session('status') }}</div>
             @endif
 
-            <form method="POST" action="{{ route('courses.notes.update', [$course, $note]) }}" class="space-y-4">
+            <form method="POST" action="{{ route('course.notes.update', [$course, $note]) }}" class="space-y-4">
                 @csrf
                 @method('PUT')
 

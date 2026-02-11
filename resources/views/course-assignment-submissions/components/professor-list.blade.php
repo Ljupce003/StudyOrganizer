@@ -76,12 +76,27 @@
                                 </div>
 
                                 <div class="flex items-center gap-2 sm:justify-end">
-                                    <a
-                                        href="{{ route('course.assignments.submissions.grade.edit', [$course, $assignment, $sub]) }}"
-                                        class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    >
-                                        {{ $isGraded ? 'Edit grade' : 'Grade' }}
-                                    </a>
+                                    @can('un_grade',$sub)
+                                        <form method="POST"
+                                              action="{{ route('course.assignments.submissions.grade.destroy', [$course, $assignment, $sub]) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button
+                                                type="submit"
+                                                class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                            >Remove grade
+                                            </button>
+                                        </form>
+                                    @endcan
+
+                                    @can('grade',$sub)
+                                        <a
+                                            href="{{ route('course.assignments.submissions.grade.edit', [$course, $assignment, $sub]) }}"
+                                            class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                        >
+                                            {{ $isGraded ? 'Edit grade' : 'Grade' }}
+                                        </a>
+                                    @endcan
                                 </div>
                             </div>
 
@@ -89,8 +104,9 @@
                             @if(!empty($sub->feedback))
                                 <div class="mt-2 text-xs text-gray-600">
                                     <span class="text-gray-500">Feedback:</span>
-                                    <x-markdown :text="\Illuminate\Support\Str::limit(strip_tags($sub->feedback), 140)" class="prose prose-sm max-w-none" />
-{{--                                    {{ \Illuminate\Support\Str::limit(strip_tags($sub->feedback), 140) }}--}}
+                                    <x-markdown :text="\Illuminate\Support\Str::limit(strip_tags($sub->feedback), 140)"
+                                                class="prose prose-sm max-w-none"/>
+                                    {{--                                    {{ \Illuminate\Support\Str::limit(strip_tags($sub->feedback), 140) }}--}}
                                 </div>
                             @endif
                         </div>

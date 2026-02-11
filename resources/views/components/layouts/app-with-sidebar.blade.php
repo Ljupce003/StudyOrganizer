@@ -11,7 +11,7 @@
                     <div class="text-sm font-semibold text-gray-700 mb-3">My Courses</div>
                     <nav class="space-y-2">
                         @forelse($sidebarCourses as $course)
-                            <a href="{{ route('courses.show', $course) }}"
+                            <a href="{{ route('course.show', $course) }}"
                                class="block rounded px-3 py-2 text-sm hover:bg-gray-100">
                                 {{ $course->short_name }}
                             </a>
@@ -29,7 +29,7 @@
                                 Course Notes
                             </div>
 
-                            <a href="{{ route('courses.notes.create', $currentCourse) }}"
+                            <a href="{{ route('course.notes.create', $currentCourse) }}"
                                class="text-xs text-blue-600 hover:underline">
                                 New
                             </a>
@@ -37,7 +37,7 @@
 
                         <nav class="space-y-2">
                             @forelse($sidebarCourseNotes as $note)
-                                <a href="{{ route('courses.notes.edit', [$currentCourse, $note]) }}"
+                                <a href="{{ route('course.notes.edit', [$currentCourse, $note]) }}"
                                    class="block rounded px-3 py-2 text-sm hover:bg-gray-100">
                                     {{ \Illuminate\Support\Str::limit($note->title ?? 'Untitled', 22) }}
                                 </a>

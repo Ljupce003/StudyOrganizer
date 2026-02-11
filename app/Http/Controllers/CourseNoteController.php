@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\Course;
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CourseNoteController extends Controller
 {
@@ -15,6 +17,12 @@ class CourseNoteController extends Controller
      */
     public function create(Course $course)
     {
+        if(auth()->user()->hasRole(UserRole::PROFESSOR)){
+            Gate::authorize('teaching-course',[$course]);
+        }else{
+            Gate::authorize('enrolled-in-course',[$course]);
+        }
+
         // Later: policy/authorization (enrolled, teacher, etc.)
         return view('course-notes.create', compact('course'));
     }
@@ -36,7 +44,7 @@ class CourseNoteController extends Controller
             'content' => $data['content'],
         ]);
 
-        return redirect()->route('courses.notes.edit', [$course, $note]);
+        return redirect()->route('course.notes.edit', [$course, $note]);
     }
 
 
@@ -46,8 +54,11 @@ class CourseNoteController extends Controller
      */
     public function edit(Course $course, Note $note)
     {
-        if ($note->user_id !== auth()->id()) abort(404);
-        if ((int) $note->course_id !== (int) $course->id) abort(404);
+//        if ($note->user_id !== auth()->id()) abort(404);
+//        if ((int) $note->course_id !== (int) $course->id) abort(404);
+
+        Gate::authorize('update', $note);
+
 
         return view('course-notes.edit', compact('course', 'note'));
     }
@@ -57,8 +68,10 @@ class CourseNoteController extends Controller
      */
     public function update(Request $request,  Course $course, Note $note)
     {
-        if ($note->user_id !== auth()->id()) abort(404);
-        if ((int) $note->course_id !== (int) $course->id) abort(404);
+//        if ($note->user_id !== auth()->id()) abort(404);
+//        if ((int) $note->course_id !== (int) $course->id) abort(404);
+
+        Gate::authorize('update', $note);
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
@@ -75,11 +88,13 @@ class CourseNoteController extends Controller
      */
     public function destroy(Course $course, Note $note)
     {
-        if ($note->user_id !== auth()->id()) abort(404);
-        if ((int) $note->course_id !== (int) $course->id) abort(404);
+//        if ($note->user_id !== auth()->id()) abort(404);
+//        if ((int) $note->course_id !== (int) $course->id) abort(404);
+
+        Gate::authorize('delete', $note);
 
         $note->delete();
 
-        return redirect()->route('courses.show', $course);
+        return redirect()->route('course.show', $course);
     }
 }

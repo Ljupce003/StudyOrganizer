@@ -35,12 +35,22 @@
             {{-- Submissions section --}}
             <div class="bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 border-b border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800">
-                        Your submissions
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Submissions you’ve made for this assignment.
-                    </p>
+                    @if($isProfessor)
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            Student submissions
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Submissions students made for this assignment.
+                        </p>
+                    @else
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            Your submissions
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Submissions you’ve made for this assignment.
+                        </p>
+                    @endif
+
                 </div>
 
                 @if($isProfessor)

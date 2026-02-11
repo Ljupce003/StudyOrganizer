@@ -1,10 +1,14 @@
 @php
     // expects: $course, $assignment, $submission
+    use App\Models\Submission;
+    $submission = $submission instanceof Submission ? $submission : Submission::query()->find($submission);
+
     $submittedAt = $submission->submitted_at ?? $submission->created_at;
     $isGraded = !is_null($submission->grade);
+
 @endphp
 
-<div class="border border-gray-200 rounded-lg p-5 hover:bg-gray-50 transition">
+<div class="border border-gray-200 rounded-lg p-5 hover:bg-gray-50 transition shadow-lg">
     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
 
         {{-- Top meta (left) --}}
@@ -27,38 +31,48 @@
         {{-- Actions + status (right) --}}
         <div class="flex flex-wrap items-center gap-2 sm:justify-end">
             @if($isGraded)
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-900 text-white">
+                <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-900 text-white">
                     Graded
                 </span>
             @else
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                     Not graded
                 </span>
             @endif
 
             {{-- Edit --}}
-            <a
-                href="{{ route('course.assignments.submissions.edit', [$course, $assignment, $submission]) }}"
-                class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                Edit
-            </a>
+            @can('update', $submission)
+                @if(!$submission->isGraded())
+                    <a
+                        href="{{ route('course.assignments.submissions.edit', [$course, $assignment, $submission]) }}"
+                        class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        Edit
+                    </a>
+                @endif
+            @endcan
 
             {{-- Delete --}}
-            <form
-                action="{{ route('course.assignments.submissions.destroy', [$course, $assignment, $submission]) }}"
-                method="POST"
-                onsubmit="return confirm('Delete this submission? This cannot be undone.')"
-            >
-                @csrf
-                @method('DELETE')
-                <button
-                    type="submit"
-                    class="inline-flex items-center px-3 py-2 bg-white border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
-                >
-                    Delete
-                </button>
-            </form>
+            @can('delete',$submission)
+                @if(!$submission->isGraded())
+                    <form
+                        action="{{ route('course.assignments.submissions.destroy', [$course, $assignment, $submission]) }}"
+                        method="POST"
+                        onsubmit="return confirm('Delete this submission? This cannot be undone.')"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <button
+                            type="submit"
+                            class="inline-flex items-center px-3 py-2 bg-white border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+                        >
+                            Delete
+                        </button>
+                    </form>
+                @endif
+            @endcan
         </div>
     </div>
 
@@ -70,8 +84,8 @@
             <div>
                 <div class="text-xs text-gray-500 mb-1">Submission</div>
                 <div class="rounded-md border border-gray-200 p-3 bg-white text-sm text-gray-800">
-                    <x-markdown :text="$submission->content" class="prose-sm" />
-{{--                    {!! nl2br(e($submission->content ?? '')) !!}--}}
+                    <x-markdown :text="$submission->content" class="prose-sm"/>
+                    {{--                    {!! nl2br(e($submission->content ?? '')) !!}--}}
                 </div>
             </div>
 
@@ -80,8 +94,8 @@
                 <div>
                     <div class="text-xs text-gray-500 mb-1">Feedback</div>
                     <div class="rounded-md border border-gray-200 p-3 bg-white text-sm text-gray-800">
-                        <x-markdown :text="$submission->feedback" class="prose-sm" />
-{{--                        {!! nl2br(e($submission->feedback)) !!}--}}
+                        <x-markdown :text="$submission->feedback" class="prose-sm"/>
+                        {{--                        {!! nl2br(e($submission->feedback)) !!}--}}
                     </div>
                 </div>
             @endif

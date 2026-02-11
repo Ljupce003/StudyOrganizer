@@ -49,5 +49,10 @@ class Course extends Model
         return $this->belongsTo(User::class,"created_by");
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class,"course_id");
+    }
+
 
 }

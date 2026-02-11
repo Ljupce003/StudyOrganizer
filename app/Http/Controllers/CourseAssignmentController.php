@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Submission;
+use Gate;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -26,6 +27,8 @@ class CourseAssignmentController extends Controller
     public function create(Course $course)
     {
         //
+        Gate::authorize("create", Assignment::class);
+
         return view('course-assignments.create', compact('course'));
 
     }
@@ -67,8 +70,12 @@ class CourseAssignmentController extends Controller
     public function show(Course $course,Assignment $assignment)
     {
 
-        if((int)$course->id !== (int) $assignment->course_id) abort(403);
+//        if((int)$course->id !== (int) $assignment->course_id) abort(403);
 
+        $editMode = request()->boolean('edit');
+        if($editMode){
+            Gate::authorize("update", $assignment);
+        }
 
         $assignment->load('creator');
 
@@ -97,7 +104,6 @@ class CourseAssignmentController extends Controller
                 ->get();
         }
 
-        $editMode = request()->boolean('edit');
         return view('course-assignments.show', compact('course','assignment','submissions','editMode','isProfessor'));
 
 
@@ -105,13 +111,13 @@ class CourseAssignmentController extends Controller
 
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Assignment $assignment)
-    {
-        //
-    }
+//    /**
+//     * Show the form for editing the specified resource.
+//     */
+//    public function edit(Assignment $assignment)
+//    {
+//        //
+//    }
 
     /**
      * Update the specified resource in storage.
@@ -119,6 +125,7 @@ class CourseAssignmentController extends Controller
     public function update(Request $request,Course $course, Assignment $assignment)
     {
         //
+        Gate::authorize("update", $assignment);
 
         if ($request->has('course_id') || $request->has('created_by')) {
             abort(403, 'Forbidden field modification attempt');
@@ -149,13 +156,15 @@ class CourseAssignmentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $course,Assignment $assignment)
+    public function destroy(Course $course,Assignment $assignment)
     {
-        if((int) $assignment->course_id !== $course) abort(404);
+//        if((int) $assignment->course_id !== $course) abort(404);
+
+        Gate::authorize("delete", $assignment);
 
         $assignment->delete();
 
-        return redirect()->route('courses.show',[$course]);
+        return redirect()->route('course.show',[$course]);
 
     }
 }

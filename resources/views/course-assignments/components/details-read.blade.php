@@ -1,3 +1,4 @@
+@php use App\Models\Submission; @endphp
 {{-- Assignment details card --}}
 <div class="bg-white shadow-sm sm:rounded-lg">
 
@@ -8,27 +9,31 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <a
-                href="{{ route('course.assignments.show', [$course, $assignment]) }}?edit=1"
-                class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                Edit
-            </a>
-
-            <form
-                action="{{ route('course.assignments.destroy', [$course, $assignment]) }}"
-                method="POST"
-                onsubmit="return confirm('Delete this assignment? This cannot be undone.')"
-            >
-                @csrf
-                @method('DELETE')
-                <button
-                    type="submit"
-                    class="inline-flex items-center px-3 py-2 bg-white border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+            @can('update', $assignment)
+                <a
+                    href="{{ route('course.assignments.show', [$course, $assignment]) }}?edit=1"
+                    class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                    Delete
-                </button>
-            </form>
+                    Edit
+                </a>
+            @endcan
+
+            @can("delete", $assignment)
+                <form
+                    action="{{ route('course.assignments.destroy', [$course, $assignment]) }}"
+                    method="POST"
+                    onsubmit="return confirm('Delete this assignment? This cannot be undone.')"
+                >
+                    @csrf
+                    @method('DELETE')
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-3 py-2 bg-white border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+                    >
+                        Delete
+                    </button>
+                </form>
+            @endcan
         </div>
     </div>
 
@@ -130,20 +135,23 @@
         {{-- Description --}}
         <div>
             <div class="prose max-w-none text-gray-800 text-sm">
-{{--                {!! nl2br(e($assignment->description)) !!}--}}
-                <x-markdown :text="$assignment->description" class="prose-sm" />
+                {{--                {!! nl2br(e($assignment->description)) !!}--}}
+                <x-markdown :text="$assignment->description" class="prose-sm"/>
             </div>
         </div>
 
         {{-- Submit button --}}
-        <div class="flex justify-end">
-            <a
-                href="{{route('course.assignments.submissions.create',[$course,$assignment])}}"
-                class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-700"
-            >
-                Add submission
-            </a>
-        </div>
+        @can('create',Submission::class)
+            <div class="flex justify-end">
+                <a
+                    href="{{route('course.assignments.submissions.create',[$course,$assignment])}}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-700"
+                >
+                    Add submission
+                </a>
+
+            </div>
+        @endcan
 
     </div>
 </div>
