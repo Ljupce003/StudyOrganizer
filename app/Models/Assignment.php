@@ -28,6 +28,7 @@ class Assignment extends Model
 
     protected $casts = [
         'due_at' => 'datetime',
+        'is_published' => 'boolean'
     ];
 
     public function submissions(): HasMany

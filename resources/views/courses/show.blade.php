@@ -1,4 +1,4 @@
-@php use App\Models\Assignment; @endphp
+@php use App\Enums\UserRole;use App\Models\Assignment;use App\Models\CourseMaterial;use App\Models\SubmissionAttachment; @endphp
 {{--<x-app-layout>--}}
 <x-layouts.app-with-sidebar :course="$course">
     {{--        <x-slot name="header">--}}
@@ -75,11 +75,29 @@
                                 <div class="bg-white border border-gray-200 rounded-lg p-5 hover:bg-gray-50 transition">
 
                                     {{-- Top row --}}
-                                    <div class="flex items-start justify-between">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+
                                         <div class="space-y-1">
-                                            <h4 class="text-lg font-semibold text-gray-900">
-                                                {{ $assignment->title }}
-                                            </h4>
+
+                                            <div class="flex items-start gap-2">
+                                                <h4 class="text-lg font-semibold text-gray-900">
+                                                    {{ $assignment->title }}
+                                                </h4>
+
+                                                @if(auth()->user()->hasRole(UserRole::PROFESSOR) || auth()->user()->hasRole(UserRole::ADMIN))
+                                                    @if(!$assignment->is_published)
+                                                        <span
+                                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold
+                       bg-yellow-100 text-yellow-900 border border-yellow-300"
+                                                            title="Students can't see this yet"
+                                                        >
+                <span class="inline-block h-1.5 w-1.5 rounded-full bg-yellow-600"></span>
+                Unpublished
+            </span>
+                                                    @endif
+                                                @endif
+                                            </div>
+
 
                                             <div class="text-sm text-gray-500">
                                                 Created by
@@ -130,26 +148,185 @@
                 <div class="p-6 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-800">Materials</h3>
 
-                    {{-- Later show only to professors/admin --}}
-                    <button
-                        type="button"
-                        class="inline-flex items-center px-3 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-700 opacity-50 cursor-not-allowed"
-                        disabled
-                        title="File uploads later"
-                    >
-                        Upload
-                    </button>
+                    @can('create', [CourseMaterial::class, $course])
+                        <a
+                            href="{{ route('course.materials.create', [$course]) }}"
+                            class="inline-flex items-center px-3 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-700 opacity-70 cursor-pointer"
+                        >
+                            + Upload
+                        </a>
+                    @endcan
                 </div>
 
-                <div class="p-6">
-                    <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                        <p class="text-gray-600 font-medium">No materials uploaded</p>
-                        <p class="text-sm text-gray-500 mt-1">
-                            PDFs, slides, and links for this course will live here later.
-                        </p>
+                @if(isset($course_materials) && $course_materials->isNotEmpty())
+                    <div class="p-4">
+                        <div class="flex flex-col gap-3">
+                            @foreach($course_materials as $material)
+                                @php
+                                    $isStaff = !auth()->user()->hasRole(UserRole::STUDENT); // adjust if needed
+                                    $fetchUrl = route('course.materials.fetch', [$course, $material,$material->original_filename]);
+
+                                    $typeLabel = null;
+                                    if ($material->mime_type) {
+                                        $typeLabel = SubmissionAttachment::typeLabel($material);
+
+                                    }
+                                @endphp
+
+                                @if(!$isStaff)
+                                    {{-- STUDENT: whole card is a link --}}
+                                    <a href="{{ $fetchUrl }}"
+                                       class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                                        <div class="min-w-0">
+                                            <h4 class="text-base font-semibold text-gray-900 truncate">
+                                                {{ $material->title }}
+                                            </h4>
+
+                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                    <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                        <span class="text-gray-500">By</span>
+                        <span class="font-medium text-gray-800">{{ $material->uploader->name ?? 'Unknown' }}</span>
+                    </span>
+
+                                                <span
+                                                    class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                        <span class="text-gray-500">Uploaded</span>
+                        <span class="font-medium text-gray-800">{{ $material->created_at->format('Y-m-d') }}</span>
+                    </span>
+
+                                                @if($material->size_bytes)
+                                                    <span
+                                                        class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                            <span class="text-gray-500">Size</span>
+                            <span class="font-medium text-gray-800">{{ number_format($material->size_bytes / 1024, 1) }} KB</span>
+                        </span>
+                                                @endif
+
+                                                @if($typeLabel)
+                                                    <span
+                                                        class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                            <span class="text-gray-500">Type</span>
+                            <span class="font-medium text-gray-800">{{ $typeLabel }}</span>
+                        </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </a>
+                                @else
+                                    {{-- STAFF: left side clickable, right side actions --}}
+                                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
+                                            {{-- Clickable content area --}}
+                                            <a href="{{ $fetchUrl }}" class="block min-w-0 flex-1">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <h4 class="text-base font-semibold text-gray-900 truncate">
+                                                        {{ $material->title }}
+                                                    </h4>
+
+                                                    @if(!$material->is_published)
+                                                        <span
+                                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold
+                                       bg-yellow-50 text-yellow-900 border border-yellow-200"
+                                                            title="Students can't see this yet"
+                                                        >
+                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
+                                Unpublished
+                            </span>
+                                                    @endif
+                                                </div>
+
+                                                <div
+                                                    class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                        <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                            <span class="text-gray-500">By</span>
+                            <span class="font-medium text-gray-800">{{ $material->uploader->name ?? 'Unknown' }}</span>
+                        </span>
+
+                                                    <span
+                                                        class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                            <span class="text-gray-500">Uploaded</span>
+                            <span class="font-medium text-gray-800">{{ $material->created_at->format('Y-m-d') }}</span>
+                        </span>
+
+                                                    @if($material->size_bytes)
+                                                        <span
+                                                            class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                                <span class="text-gray-500">Size</span>
+                                <span class="font-medium text-gray-800">{{ number_format($material->size_bytes / 1024, 1) }} KB</span>
+                            </span>
+                                                    @endif
+
+                                                    @if($typeLabel)
+                                                        <span
+                                                            class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1">
+                                <span class="text-gray-500">Type</span>
+                                <span class="font-medium text-gray-800">{{ $typeLabel }}</span>
+                            </span>
+                                                    @endif
+                                                </div>
+                                            </a>
+
+                                            {{-- Actions (not clickable area) --}}
+                                            <div class="flex flex-wrap items-center gap-2 shrink-0 justify-end">
+                                                @can('update', $material)
+                                                    <a
+                                                        href="{{ route('course.materials.edit', [$course, $material]) }}"
+                                                        class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                                    >
+                                                        Edit
+                                                    </a>
+                                                @endcan
+
+                                                @can('delete', $material)
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('course.materials.destroy', [$course, $material]) }}"
+                                                        onsubmit="return confirm('Delete this material? This will remove the file too.');"
+                                                    >
+                                                        @csrf
+                                                        @method('DELETE')
+
+                                                        <button
+                                                            type="submit"
+                                                            class="inline-flex items-center px-3 py-2 bg-white border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                @endcan
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+
+
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="p-6">
+                        <div class="rounded-lg border border-dashed border-gray-300 p-6 text-center">
+                            <p class="text-gray-600 font-medium">No materials uploaded</p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                PDFs, slides, and other files for this course will show up here.
+                            </p>
+
+                            @can('create', [CourseMaterial::class, $course])
+                                <div class="mt-4">
+                                    <a
+                                        href="{{ route('course.materials.create', [$course]) }}"
+                                        class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-700"
+                                    >
+                                        Upload first material
+                                    </a>
+                                </div>
+                            @endcan
+                        </div>
+                    </div>
+                @endif
             </section>
+
 
         </div>
     </div>

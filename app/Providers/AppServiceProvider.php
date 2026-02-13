@@ -32,15 +32,24 @@ class AppServiceProvider extends ServiceProvider
             $currentCourse = null;
 
             if ($user) {
-                if($user->hasRole(UserRole::PROFESSOR)){
+                if($user->hasRole(UserRole::ADMIN)){
+                    $sidebarCourses = Course::query()
+                        ->select('courses.id', 'courses.short_name','courses.name','courses.code')
+                        ->orderBy('year',"desc")
+                        ->orderBy('short_name')
+                        ->get();
+                }
+                elseif($user->hasRole(UserRole::PROFESSOR)){
                     $sidebarCourses = $user->teachingCourses()
-                        ->select('courses.id', 'courses.short_name')
+                        ->select('courses.id', 'courses.short_name','courses.name','courses.code')
+                        ->orderBy('year',"desc")
                         ->orderBy('short_name')
                         ->get();
                 }
                 else{
                     $sidebarCourses = $user->courses()
-                        ->select('courses.id', 'courses.short_name')
+                        ->select('courses.id', 'courses.short_name','courses.name','courses.code')
+                        ->orderBy('year',"desc")
                         ->orderBy('short_name')
                         ->get();
                 }

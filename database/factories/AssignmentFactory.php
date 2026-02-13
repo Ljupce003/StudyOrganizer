@@ -31,7 +31,7 @@ class AssignmentFactory extends Factory
 
             // creator should realistically be a professor or admin
             'created_by' => User::query()
-                ->whereIn('role', [ UserRole::ADMIN->value])
+                ->whereIn('role', [ UserRole::PROFESSOR->value])
                 ->inRandomOrder()
                 ->value('id'),
 

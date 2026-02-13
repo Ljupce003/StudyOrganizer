@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId("student_id")->constrained("users")->nullOnDelete();
 
             $table->longText("content")->nullable(); //text answer or link
-            $table->string("attachment_path")->nullable(); //for adding files later
 
             $table->dateTime("submitted_at")->nullable();
 

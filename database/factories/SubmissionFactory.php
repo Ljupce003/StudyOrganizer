@@ -35,7 +35,6 @@ class SubmissionFactory extends Factory
             'student_id'    => null,  // set in seeder
 
             'content' => $this->faker->optional(0.8)->paragraphs($this->faker->numberBetween(1, 3), true),
-            'attachment_path' => null, // later
 
             'submitted_at' => $submittedAt,
 

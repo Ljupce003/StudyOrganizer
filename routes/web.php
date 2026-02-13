@@ -3,14 +3,18 @@
 use App\Http\Controllers\AssignmentSubmissionController;
 use App\Http\Controllers\CourseAssignmentController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseMaterialController;
 use App\Http\Controllers\CourseNoteController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubmissionAttachmentController;
 use App\Http\Controllers\SubmissionGradingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+
+    if(auth()->user()) return redirect()->route('dashboard');
+    return view('landing');
 });
 
 Route::get('/dashboard', function () {
@@ -67,6 +71,15 @@ Route::middleware('auth')->group(function () {
                     Route::get('/{submission}/edit', [AssignmentSubmissionController::class, 'edit'])->name('edit');
                     Route::put('/{submission}', [AssignmentSubmissionController::class, 'update'])->name('update');
                     Route::delete('/{submission}', [AssignmentSubmissionController::class, 'destroy'])->name('destroy');
+
+                    Route::prefix('{submission}/attachments')->name('attachments.')->group(function () {
+                        Route::get('/{attachment}/{filename?}', [SubmissionAttachmentController::class, 'fetch'])
+                            ->name('fetch');
+
+                        Route::delete('/{attachment}', [SubmissionAttachmentController::class, 'destroy'])
+                            ->name('destroy');
+                    });
+
                 });
 
                 // Grading routes (explicit, not CRUD)
@@ -79,6 +92,20 @@ Route::middleware('auth')->group(function () {
                 Route::delete('/{assignment}/submissions/{submission}/grade',
                     [SubmissionGradingController::class, 'destroy']
                 )->name('submissions.grade.destroy');
+            });
+
+
+            Route::prefix('materials')->name('materials.')->group(function () {
+//                Route::get('/', [CourseMaterialController::class, 'index'])->name('index');
+//                Route::get('/create', [CourseMaterialController::class, 'create'])->name('create');
+//                Route::post('/', [CourseMaterialController::class, 'store'])->name('store');
+
+                Route::get('/create', [CourseMaterialController::class, 'create'])->name('create');
+                Route::post('/', [CourseMaterialController::class, 'store'])->name('store');
+                Route::get('/{material}/edit', [CourseMaterialController::class, 'edit'])->name('edit');
+                Route::put('/{material}', [CourseMaterialController::class, 'update'])->name('update');
+                Route::delete('/{material}', [CourseMaterialController::class, 'destroy'])->name('destroy');
+                Route::get('/{material}/{filename}', [CourseMaterialController::class, 'fetch'])->name('fetch');
             });
 
 

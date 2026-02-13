@@ -76,6 +76,7 @@
             <form
                 action="{{ route('course.assignments.submissions.store', [$course, $assignment]) }}"
                 method="POST"
+                enctype="multipart/form-data"
                 class="bg-white shadow-sm sm:rounded-lg"
             >
                 @csrf
@@ -116,39 +117,40 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                     @enderror
 
-                    <p class="text-xs text-gray-500">
-                        Use Markdown for formatting. Links are allowed. Files later.
-                    </p>
+                    <div class="pt-2 space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                            Attach files (optional)
+                        </label>
+
+                        <input
+                            type="file"
+                            name="files[]"
+                            multiple
+                            class="block w-full text-sm text-gray-700
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-md file:border-0
+               file:text-sm file:font-medium
+               file:bg-gray-900 file:text-white
+               hover:file:bg-gray-700"
+                        >
+
+                        @error('files')
+                        <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                        @error('files.*')
+                        <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+
+                        <p class="text-xs text-gray-500">
+                            You can select multiple files. Each file must be under 10MB.
+                        </p>
+                    </div>
+
+
                 </div>
             </form>
 
         </div>
     </div>
 
-{{--    --}}{{-- EasyMDE --}}
-{{--    @push('styles')--}}
-{{--        <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">--}}
-{{--    @endpush--}}
-
-{{--    @push('scripts')--}}
-{{--        <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>--}}
-{{--        <script>--}}
-{{--            document.addEventListener('DOMContentLoaded', function () {--}}
-{{--                const textarea = document.getElementById('submission-content');--}}
-{{--                if (!textarea) return;--}}
-
-{{--                new EasyMDE({--}}
-{{--                    element: textarea,--}}
-{{--                    spellChecker: false,--}}
-{{--                    status: false,--}}
-{{--                    autosave: false,--}}
-{{--                    toolbar: [--}}
-{{--                        "bold", "italic", "heading", "|",--}}
-{{--                        "quote", "unordered-list", "ordered-list", "|",--}}
-{{--                        "link", "preview", "side-by-side", "fullscreen"--}}
-{{--                    ],--}}
-{{--                });--}}
-{{--            });--}}
-{{--        </script>--}}
-{{--    @endpush--}}
 </x-layouts.app-with-sidebar>

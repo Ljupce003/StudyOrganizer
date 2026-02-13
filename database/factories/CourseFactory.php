@@ -21,11 +21,11 @@ class CourseFactory extends Factory
     protected $model = Course::class;
     public function definition(): array
     {
-        $year = now()->year;
+        $year = $this->faker->numberBetween(now()->year - 3, now()->year);
         $semester = $this->faker->randomElement(['Fall', 'Spring']);
 
         $codePrefix = $this->faker->randomElement(['CS', 'SE', 'IT', 'DS']);
-        $codeNumber = $this->faker->numberBetween(100, 499);
+        $codeNumber = $this->faker->numberBetween(1, 9) . substr($year."",2,2);
         $code = $codePrefix . $codeNumber;
 
         return [

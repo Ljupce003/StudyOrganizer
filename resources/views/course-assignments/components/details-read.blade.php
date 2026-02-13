@@ -92,32 +92,35 @@
                     </div>
                 </div>
 
-                {{-- Grading strategy --}}
-                <div class="rounded-md bg-white border border-gray-200 p-3">
-                    <div class="text-xs text-gray-500">Grading strategy</div>
-                    <div class="text-sm font-medium text-gray-900">
-                        {{ $assignment->grading_strategy }}
-                    </div>
-                </div>
+                @can('staff')
 
-                {{-- Allow late --}}
-                <div class="rounded-md bg-white border border-gray-200 p-3">
-                    <div class="text-xs text-gray-500">Allow late</div>
-                    <div class="text-sm font-medium text-gray-900">
-                        {{ $assignment->allow_late ? 'Yes' : 'No' }}
+                    {{-- Grading strategy --}}
+                    <div class="rounded-md bg-white border border-gray-200 p-3">
+                        <div class="text-xs text-gray-500">Grading strategy</div>
+                        <div class="text-sm font-medium text-gray-900">
+                            {{ $assignment->grading_strategy }}
+                        </div>
                     </div>
-                </div>
 
-                {{-- Published --}}
-                <div class="rounded-md bg-white border border-gray-200 p-3">
-                    <div class="text-xs text-gray-500">Published</div>
-                    <div class="text-sm font-medium text-gray-900">
-                        {{ $assignment->is_published ? 'Yes' : 'No' }}
+                    {{-- Allow late --}}
+                    <div class="rounded-md bg-white border border-gray-200 p-3">
+                        <div class="text-xs text-gray-500">Allow late</div>
+                        <div class="text-sm font-medium text-gray-900">
+                            {{ $assignment->allow_late ? 'Yes' : 'No' }}
+                        </div>
                     </div>
-                </div>
 
-                {{-- Spacer / future slot (keeps grid balanced nicely) --}}
-                <div class="hidden lg:block"></div>
+                    {{-- Published --}}
+                    <div class="rounded-md bg-white border border-gray-200 p-3">
+                        <div class="text-xs text-gray-500">Published</div>
+                        <div class="text-sm font-medium text-gray-900">
+                            {{ $assignment->is_published ? 'Yes' : 'No' }}
+                        </div>
+                    </div>
+
+                    {{-- Spacer / future slot (keeps grid balanced nicely) --}}
+                    <div class="hidden lg:block"></div>
+                @endcan
             </div>
         </div>
 

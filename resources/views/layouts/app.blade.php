@@ -29,6 +29,12 @@
     <main>
         {{ $slot }}
     </main>
+
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="max-w-7xl mx-auto px-6 text-sm text-gray-500 text-center">
+            © {{ now()->year }} StudyOrganizer
+        </div>
+    </footer>
 </div>
 
 

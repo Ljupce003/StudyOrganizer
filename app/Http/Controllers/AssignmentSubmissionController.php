@@ -7,6 +7,8 @@ use App\Models\Course;
 use App\Models\Submission;
 use Gate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Storage;
 
 class AssignmentSubmissionController extends Controller
 {
@@ -41,7 +43,8 @@ class AssignmentSubmissionController extends Controller
 
         $validated = $request->validate([
             'content' => ['required', 'string', 'min:1', 'max:20000'],
-            // Do NOT accept attachment_path yet. Files later.
+            'files' => ['nullable','array'],
+            'files.*' => ['file','max:10240'] // 10MB each
         ]);
 
         $studentId = auth()->id();
@@ -60,13 +63,39 @@ class AssignmentSubmissionController extends Controller
             }
         }
 
-        Submission::query()->create([
+        $submission = Submission::query()->create([
             'assignment_id' => $assignment->id,
             'student_id' => $studentId,
             'content' => $validated['content'],
             'submitted_at' => now(),
             // attachment_path stays null for now
         ]);
+
+        $disk = config('materials.disk');
+
+        foreach ($request->file('files',[]) as $file){
+
+            $originalName = $file->getClientOriginalName();
+            $ext = $file->getClientOriginalExtension();
+            $storedName = Str::uuid() . ($ext ? ".$ext" : '');
+
+            $basePath = "courses/$course->id/assignments/$assignment->id/submissions/$submission->id";
+
+            Storage::disk($disk)->putFileAs(
+                $basePath,
+                $file,
+                $storedName
+            );
+
+            $submission->attachments()->create([
+                'uploaded_by' => $request->user()->id,
+                'original_filename' => $originalName,
+                'storage_disk' => $disk,
+                'storage_path' => "$basePath/$storedName",
+                'mime_type' => $file->getMimeType(),
+                'size_bytes' => $file->getSize()
+            ]);
+        }
 
         return redirect()->route('course.assignments.show', [$course, $assignment]);
     }
@@ -90,7 +119,9 @@ class AssignmentSubmissionController extends Controller
 
         $assignment->load('creator');
 
-        return view('course-assignment-submissions.edit', compact('course', 'assignment', 'submission'));
+        $submission_attachments = $submission->attachments();
+
+        return view('course-assignment-submissions.edit', compact('course', 'assignment', 'submission','submission_attachments'));
     }
 
     /**
@@ -104,7 +135,35 @@ class AssignmentSubmissionController extends Controller
 
         $validated = $request->validate([
             'content' => ['required', 'string', 'min:1', 'max:20000'],
+            'files' => ['nullable','array'],
+            'files.*' => ['file','max:10240'] // 10MB each
         ]);
+
+        $disk = config('materials.disk');
+
+        foreach ($request->file('files',[]) as $file){
+
+            $originalName = $file->getClientOriginalName();
+            $ext = $file->getClientOriginalExtension();
+            $storedName = Str::uuid() . ($ext ? ".$ext" : '');
+
+            $basePath = "courses/$course->id/assignments/$assignment->id/submissions/$submission->id";
+
+            Storage::disk($disk)->putFileAs(
+                $basePath,
+                $file,
+                $storedName
+            );
+
+            $submission->attachments()->create([
+                'uploaded_by' => $request->user()->id,
+                'original_filename' => $originalName,
+                'storage_disk' => $disk,
+                'storage_path' => "$basePath/$storedName",
+                'mime_type' => $file->getMimeType(),
+                'size_bytes' => $file->getSize()
+            ]);
+        }
 
         $submission->update([
             'content' => $validated['content'],

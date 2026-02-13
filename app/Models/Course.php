@@ -54,5 +54,10 @@ class Course extends Model
         return $this->hasMany(Note::class,"course_id");
     }
 
+    function materials(): HasMany
+    {
+        return $this->HasMany(CourseMaterial::class,"course_id");
+    }
+
 
 }

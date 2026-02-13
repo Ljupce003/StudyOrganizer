@@ -1,7 +1,10 @@
 @php
     // expects: $course, $assignment, $submission
     use App\Models\Submission;
-    $submission = $submission instanceof Submission ? $submission : Submission::query()->find($submission);
+    $submission = $submission instanceof Submission
+    ? $submission
+    : Submission::with('attachments','grader')->findOrFail($submission);
+
 
     $submittedAt = $submission->submitted_at ?? $submission->created_at;
     $isGraded = !is_null($submission->grade);
@@ -88,6 +91,35 @@
                     {{--                    {!! nl2br(e($submission->content ?? '')) !!}--}}
                 </div>
             </div>
+
+            {{-- Attachments --}}
+            @if($submission->attachments?->isNotEmpty())
+                <div>
+                    <div class="text-xs text-gray-500 mb-1">Attachments</div>
+
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($submission->attachments->take(3) as $attachment)
+                            <a
+                                href="{{ route('course.assignments.submissions.attachments.fetch',
+                        [$course, $assignment, $submission, $attachment, $attachment->original_filename]) }}"
+                                class="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-50 max-w-full"
+                                title="{{ $attachment->original_filename }}"
+                            >
+                    <span class="truncate max-w-[220px]">
+                        {{ $attachment->original_filename }}
+                    </span>
+                            </a>
+                        @endforeach
+
+                        @if($submission->attachments->count() > 3)
+                            <span class="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-600">
+                    +{{ $submission->attachments->count() - 3 }} more
+                </span>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
 
             {{-- Optional feedback --}}
             @if(!empty($submission->feedback))

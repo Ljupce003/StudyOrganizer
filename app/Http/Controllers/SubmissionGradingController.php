@@ -20,7 +20,7 @@ class SubmissionGradingController extends Controller
 
         Gate::authorize('grade', $submission);
 
-        $submission->load(['student', 'grader']);
+        $submission->load(['student', 'grader','attachments']);
 
         return view('submissions.grade', compact('course', 'assignment', 'submission'));
     }

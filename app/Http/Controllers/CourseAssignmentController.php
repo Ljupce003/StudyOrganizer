@@ -100,6 +100,7 @@ class CourseAssignmentController extends Controller
             $submissions = $assignment->submissions()
                 ->where('student_id', auth()->id())
                 ->with('grader:id,name')
+                ->with("attachments")
                 ->latest('submitted_at')
                 ->get();
         }
