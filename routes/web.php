@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
 
-    if(auth()->user()) return redirect()->route('dashboard');
-    return view('landing');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : view('landing');
 });
 
 Route::get('/dashboard', function () {
@@ -28,7 +29,7 @@ Route::middleware('auth')->group(function () {
 
 
     //notes
-    Route::prefix('notes')->name('notes.')->group(function (){
+    Route::prefix('notes')->name('notes.')->group(function () {
         Route::get('/create', [NoteController::class, 'create'])->name('create');
         Route::post('/', [NoteController::class, 'store'])->name('store');
         Route::get('/{note}/edit', [NoteController::class, 'edit'])->name('edit');
@@ -47,7 +48,6 @@ Route::middleware('auth')->group(function () {
 
             // Course notes
             Route::prefix('notes')->name('notes.')->group(function () {
-
                 Route::get('/create', [CourseNoteController::class, 'create'])->name('create');
                 Route::post('/', [CourseNoteController::class, 'store'])->name('store');
                 Route::get('/{note}/edit', [CourseNoteController::class, 'edit'])->name('edit');
@@ -60,11 +60,10 @@ Route::middleware('auth')->group(function () {
                 Route::get('/create', [CourseAssignmentController::class, 'create'])->name('create');
                 Route::post('/', [CourseAssignmentController::class, 'store'])->name('store');
                 Route::get('/{assignment}', [CourseAssignmentController::class, 'show'])->name('show');
-//                Route::get('/{assignment}/edit', [CourseAssignmentController::class, 'edit'])->name('edit');
                 Route::put('/{assignment}', [CourseAssignmentController::class, 'update'])->name('update');
                 Route::delete('/{assignment}', [CourseAssignmentController::class, 'destroy'])->name('destroy');
 
-                // Submissions nested under assignment (if you do it this way)
+                // Submissions nested under assignment
                 Route::prefix('{assignment}/submissions')->name('submissions.')->group(function () {
                     Route::get('/create', [AssignmentSubmissionController::class, 'create'])->name('create');
                     Route::post('/', [AssignmentSubmissionController::class, 'store'])->name('store');
@@ -72,34 +71,25 @@ Route::middleware('auth')->group(function () {
                     Route::put('/{submission}', [AssignmentSubmissionController::class, 'update'])->name('update');
                     Route::delete('/{submission}', [AssignmentSubmissionController::class, 'destroy'])->name('destroy');
 
-                    Route::prefix('{submission}/attachments')->name('attachments.')->group(function () {
-                        Route::get('/{attachment}/{filename?}', [SubmissionAttachmentController::class, 'fetch'])
-                            ->name('fetch');
+                    // Submission grading nested under submission
+                    Route::prefix("{submission}/grade")->name('grade.')->group(function () {
+                        Route::get('', [SubmissionGradingController::class, 'edit'])->name('edit');
+                        Route::put('', [SubmissionGradingController::class, 'update'])->name('update');
+                        Route::delete('', [SubmissionGradingController::class, 'destroy'])->name('destroy');
+                    });
 
-                        Route::delete('/{attachment}', [SubmissionAttachmentController::class, 'destroy'])
-                            ->name('destroy');
+                    // Attachments nested under submission
+                    Route::prefix('{submission}/attachments')->name('attachments.')->group(function () {
+                        Route::get('/{attachment}/{filename?}', [SubmissionAttachmentController::class, 'fetch'])->name('fetch');
+                        Route::delete('/{attachment}', [SubmissionAttachmentController::class, 'destroy'])->name('destroy');
                     });
 
                 });
 
-                // Grading routes (explicit, not CRUD)
-                Route::get('/{assignment}/submissions/{submission}/grade', [SubmissionGradingController::class, 'edit'])
-                    ->name('submissions.grade.edit');
-
-                Route::put('/{assignment}/submissions/{submission}/grade', [SubmissionGradingController::class, 'update'])
-                    ->name('submissions.grade.update');
-
-                Route::delete('/{assignment}/submissions/{submission}/grade',
-                    [SubmissionGradingController::class, 'destroy']
-                )->name('submissions.grade.destroy');
             });
 
-
+            // Course Materials nested under course
             Route::prefix('materials')->name('materials.')->group(function () {
-//                Route::get('/', [CourseMaterialController::class, 'index'])->name('index');
-//                Route::get('/create', [CourseMaterialController::class, 'create'])->name('create');
-//                Route::post('/', [CourseMaterialController::class, 'store'])->name('store');
-
                 Route::get('/create', [CourseMaterialController::class, 'create'])->name('create');
                 Route::post('/', [CourseMaterialController::class, 'store'])->name('store');
                 Route::get('/{material}/edit', [CourseMaterialController::class, 'edit'])->name('edit');
@@ -111,25 +101,6 @@ Route::middleware('auth')->group(function () {
 
         });
 
-//    Route::resource("courses", CourseController::class);
-
-//    Route::resource("notes", NoteController::class)->except(['index', 'show']);
-//    Route::resource("courses.notes", CourseNoteController::class)->except(['index', 'show'])->scoped();
-
-//    Route::resource("course.assignments", CourseAssignmentController::class)->scoped();
-//    Route::resource("course.assignments.submissions", AssignmentSubmissionController::class);
-
-
-//    Route::get(
-//        'course/{course}/assignments/{assignment}/submissions/{submission}/grade',
-//        [SubmissionGradingController::class, 'edit']
-//    )->name('course.assignments.submissions.grade.edit');
-//
-//    Route::put(
-//        'course/{course}/assignments/{assignment}/submissions/{submission}/grade',
-//        [SubmissionGradingController::class, 'update']
-//    )->name('course.assignments.submissions.grade.update');
-
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
