@@ -144,7 +144,7 @@ php artisan view:clear || true
 php artisan config:cache || true
 
 echo "==> Running migrations..."
-php artisan migrate --force
+php artisan migrate:fresh --force
 
 if [[ "$DO_SEED" == "true" ]]; then
   echo "==> Running seeders..."

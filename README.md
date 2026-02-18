@@ -4,7 +4,6 @@
   <img src="public/favicon.svg" alt="StudyOrganizer Logo" width="25%">
 </p>
 
-
 ---
 
 ## Overview
@@ -80,6 +79,7 @@ The project emphasizes understanding how backend systems work beyond basic CRUD 
 * Environment-based storage disk configuration
 * Download and inline file responses
 * File type labeling utility
+* Configurable upload size limits (Nginx + PHP)
 
 ### Admin Panel
 
@@ -106,7 +106,9 @@ The project emphasizes understanding how backend systems work beyond basic CRUD 
 
 The project includes an automation script designed to provision and deploy the application on an AWS EC2 instance.
 
-The script handles:
+### Automated Provisioning Script
+
+The setup script handles:
 
 * Nginx installation and configuration
 * PHP-FPM setup
@@ -117,10 +119,71 @@ The script handles:
 * Permissions setup (www-data / app user)
 * Database migrations and seeding
 * HTTPS configuration via Certbot
+* Automatic upload limit configuration (default: 20MB)
 * APP_URL configuration
 
-The deployment workflow was tested on AWS EC2.
-Compatibility with other providers (Google Cloud, Azure) has not been officially tested and may require adjustments.
+Upload limits are automatically applied to:
+
+* Nginx (`client_max_body_size`)
+* PHP (`upload_max_filesize`, `post_max_size`)
+
+This ensures consistent file size handling across the stack.
+
+---
+
+## Database Support
+
+### Default: SQLite
+
+The project uses SQLite by default for simplicity and rapid deployment.
+
+### PostgreSQL (Production-Ready)
+
+The application is fully compatible with PostgreSQL and supports migration to:
+
+* Local PostgreSQL
+* AWS RDS PostgreSQL
+
+A dedicated automation script is included to:
+
+* Install the required `pdo_pgsql` PHP extension
+* Update `.env` configuration to use `pgsql`
+* Configure database credentials
+* Clear Laravel caches
+* Run migrations
+* Optionally seed the database
+
+### SQLite → PostgreSQL Transfer Script
+
+An additional script is provided to automate data transfer from SQLite to PostgreSQL.
+
+The script:
+
+* Connects to SQLite
+* Connects to PostgreSQL via PDO
+* Migrates table data safely
+* Preserves relational integrity
+* Ensures type compatibility
+* Validates connection before migration
+
+This allows easy transition from local development (SQLite) to production (PostgreSQL or RDS) without manual data
+export/import.
+
+---
+
+## AWS Deployment Compatibility
+
+The deployment workflow has been tested on:
+
+* AWS EC2 (Ubuntu)
+* Nginx + PHP-FPM
+* Optional AWS RDS PostgreSQL
+* Cloudflare DNS integration
+
+Elastic IP usage is recommended to prevent IP changes during instance stop/start operations.
+
+Compatibility with other cloud providers (Google Cloud, Azure) has not been officially tested and may require
+adjustments.
 
 ---
 
@@ -131,20 +194,22 @@ Compatibility with other providers (Google Cloud, Azure) has not been officially
 * Blade
 * Tailwind CSS
 * Filament (Admin panel)
-* SQLite (default) – easily configurable
+* SQLite (default)
+* PostgreSQL (optional production configuration)
 * Nginx
 * PHP-FPM
 * AWS EC2
+* AWS RDS (optional)
 * Cloudflare (DNS configuration)
 
 ---
 
 ## Possible Future Improvements
 
-* Database switch to PostgreSQL or MySQL in production
-* RDS integration
+* Full RDS production configuration templates
 * Horizontal scaling support
 * Messaging/notification system
 * Activity logs
 * CI/CD pipeline integration
 * Containerized deployment (Docker/Kubernetes)
+* Direct-to-S3 file uploads for large file optimization
