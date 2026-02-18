@@ -1,59 +1,150 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# StudyOrganizer – Laravel Study Planner & Assignment Tracker
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+<div style="width: auto; display: flex; justify-content: center">
+<img alt="favicon.svg" src="public/favicon.svg" width="25%"/>
+</div>
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+StudyOrganizer is a full-stack Laravel application designed to manage courses, assignments, submissions, grading, and
+personal notes within an academic environment.
 
-## Learning Laravel
+The system supports multiple user roles (students, professors, administrators) and implements structured authorization
+to ensure secure and controlled access to resources.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+This project was developed as an advanced student project with a focus on clean architecture, security, and
+production-style deployment practices.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Purpose
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The goal of StudyOrganizer is to simulate a lightweight Learning Management System (LMS) that demonstrates:
 
-### Premium Partners
+* Role-based access control
+* Secure assignment submission and grading workflows
+* Course-scoped resource management
+* File upload and storage abstraction
+* Clean architectural separation
+* Production-style deployment setup
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+The project emphasizes understanding how backend systems work beyond basic CRUD functionality.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Core Features
 
-## Code of Conduct
+### Authentication & Roles
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+* Laravel Breeze authentication
+* Role enum system (STUDENT, PROFESSOR, ADMIN)
+* Role-based access restrictions
+* Gates and Policies for model-level authorization
 
-## Security Vulnerabilities
+### Courses
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+* Course creation and management (Admin)
+* Assignment of students and professors to courses
+* Scoped access to course-specific resources
 
-## License
+### Assignments
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+* Course-scoped assignment management
+* Configurable fields (title, description, due date, grading strategy, attempt limits, etc.)
+* Publish/unpublish functionality
+* Professors/Admins can create, edit, and delete assignments
+
+### Submissions
+
+* Students can submit assignments (with attempt limits)
+* Markdown-supported submission content
+* File attachments
+* Controlled editing before grading
+* Professors/Admins can grade and ungrade submissions
+
+### Notes System
+
+* Global notes (not tied to a course)
+* Course-specific notes
+* Markdown editor integration
+* Owner-only access
+* XSS-aware rendering
+
+### File Management
+
+* Course materials upload
+* Submission attachments
+* Environment-based storage disk configuration
+* Download and inline file responses
+* File type labeling utility
+
+### Admin Panel
+
+* Built with Filament (Admin-only)
+* User management
+* Course management
+* Pivot-based assignment of students/professors
+
+---
+
+## Architecture Highlights
+
+* Clean Controller-based architecture (no heavy UI frameworks for main app)
+* Explicit routing (no full `Route::resource` overuse)
+* Dedicated Action classes for domain logic (e.g., grading)
+* Scoped route bindings for nested resources
+* Policy-based authorization
+* Environment-driven storage abstraction
+* Markdown rendering component with sanitation considerations
+
+---
+
+## Deployment & Infrastructure
+
+The project includes an automation script designed to provision and deploy the application on an AWS EC2 instance.
+
+The script handles:
+
+* Nginx installation and configuration
+* PHP-FPM setup
+* Composer installation
+* Node installation
+* SQLite database setup (default)
+* Environment configuration
+* Permissions setup (www-data / app user)
+* Database migrations and seeding
+* HTTPS configuration via Certbot
+* APP_URL configuration
+
+The deployment workflow was tested on AWS EC2.
+Compatibility with other providers (Google Cloud, Azure) has not been officially tested and may require adjustments.
+
+---
+
+## Technologies Used
+
+* Laravel
+* PHP
+* Blade
+* Tailwind CSS
+* Filament (Admin panel)
+* SQLite (default) – easily configurable
+* Nginx
+* PHP-FPM
+* AWS EC2
+* Cloudflare (DNS configuration)
+
+---
+
+## Possible Future Improvements
+
+* Database switch to PostgreSQL or MySQL in production
+* RDS integration
+* Horizontal scaling support
+* Messaging/notification system
+* Activity logs
+* CI/CD pipeline integration
+* Containerized deployment (Docker/Kubernetes)
