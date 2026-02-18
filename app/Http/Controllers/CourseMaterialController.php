@@ -25,7 +25,7 @@ class CourseMaterialController extends Controller
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
-            'file' => ['required', 'file', 'max:10240'], //10MB
+            'file' => ['required', 'file', 'max:20480'], //10MB
             'is_published' => ['sometimes', 'boolean:']
         ]);
 
@@ -80,7 +80,7 @@ class CourseMaterialController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'is_published' => ['sometimes', 'boolean'],
-            'file' => ['nullable', 'file', 'max:10240'], // 10MB example
+            'file' => ['nullable', 'file', 'max:20480'], // 10MB example
         ]);
 
         $material->title = $data['title'];

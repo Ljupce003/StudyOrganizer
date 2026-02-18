@@ -137,6 +137,30 @@ sudo -u "${APP_USER}" -H bash -lc "
   composer install --no-interaction
 "
 
+configure_upload_limits() {
+  local MAX_SIZE="20M"
+
+  echo "==> Configuring upload limits to ${MAX_SIZE}"
+
+  local PHP_VER
+  PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
+
+  local PHP_INI="/etc/php/${PHP_VER}/fpm/php.ini"
+  [[ -f "$PHP_INI" ]] || die "php.ini not found at $PHP_INI"
+
+  echo "==> Updating PHP limits in $PHP_INI"
+
+  sudo sed -i -E "s~^[;[:space:]]*upload_max_filesize[[:space:]]*=.*~upload_max_filesize = ${MAX_SIZE}~" "$PHP_INI"
+  sudo sed -i -E "s~^[;[:space:]]*post_max_size[[:space:]]*=.*~post_max_size = ${MAX_SIZE}~" "$PHP_INI"
+  sudo sed -i -E "s~^[;[:space:]]*max_execution_time[[:space:]]*=.*~max_execution_time = 120~" "$PHP_INI"
+  sudo sed -i -E "s~^[;[:space:]]*max_input_time[[:space:]]*=.*~max_input_time = 120~" "$PHP_INI"
+
+  echo "==> Restarting PHP-FPM (php${PHP_VER}-fpm)"
+  sudo systemctl restart "php${PHP_VER}-fpm"
+}
+
+configure_upload_limits
+
 echo "== Ensure SQLite DB file exists (if using sqlite) =="
 sudo -u "${APP_USER}" -H bash -lc "
   mkdir -p '${APP_DIR}/database'
@@ -179,6 +203,8 @@ cat > "${NGINX_SITE}" << EOF
 server {
     listen 80;
     server_name ${DOMAIN};
+
+    client_max_body_size 20M;
 
     root ${APP_DIR}/public;
     index index.php;
@@ -228,7 +254,7 @@ sudo -u "${APP_USER}" -H bash -lc "
 
 echo "== Restart services =="
 systemctl restart nginx
-systemctl restart php*-fpm 2>/dev/null || true
+#systemctl restart php*-fpm 2>/dev/null || true
 
 echo "== Migrations/Seeding =="
 if [ "${DO_SEED}" -eq 1 ]; then
