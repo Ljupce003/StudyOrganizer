@@ -1,8 +1,8 @@
 # StudyOrganizer – Laravel Study Planner & Assignment Tracker
 
-<div style="width: auto; display: flex; justify-content: center">
-<img alt="favicon.svg" src="public/favicon.svg" width="25%"/>
-</div>
+<p align="center">
+  <img src="public/favicon.svg" alt="StudyOrganizer Logo" width="25%">
+</p>
 
 
 ---
