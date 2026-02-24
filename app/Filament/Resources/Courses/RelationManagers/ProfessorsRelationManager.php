@@ -2,10 +2,14 @@
 
 namespace App\Filament\Resources\Courses\RelationManagers;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -31,15 +35,44 @@ class ProfessorsRelationManager extends RelationManager
                 TextColumn::make('email')->searchable(),
             ])
             ->headerActions([
-                AttachAction::make()
+                Action::make("assignProfessor")
                     ->label('Assign professor')
-                    ->recordSelectSearchColumns(['name', 'email'])
-                    ->recordTitle(fn($record) => $record->name . " - " . $record->email)
-                    ->preloadRecordSelect()
-                    ->recordSelectOptionsQuery(fn($query) =>
-                    $query->whereDoesntHave('teachingCourses', fn($q) => $q
-                        ->where('courses.id', $this->getOwnerRecord()->id)
-                    ))
+                    ->schema([
+                        Select::make("user_id")
+                            ->label("Professor")
+                            ->searchable()
+                            ->options(fn() => User::query()
+                                ->where('role', UserRole::PROFESSOR)
+                                ->whereDoesntHave('teachingCourses', fn($query) =>
+                                    $query->where("courses.id", $this->getOwnerRecord()->id))
+                            ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn($user) => [$user->id => "$user->name - $user->email"])
+                            )
+                        ->required(),
+                    ])
+                ->action(function (array $data){
+                    try {
+                        $this->getOwnerRecord()
+                            ->professors()
+                            ->attach($data['user_id'],['created_at' => \Symfony\Component\Clock\now()]);
+                    } catch (QueryException $e){
+                        Notification::make()
+                            ->title("Assignment Error")
+                            ->body("$e")
+                            ->danger()
+                            ->send();
+                    }
+                })
+//                AttachAction::make()
+//                    ->label('Assign professor')
+//                    ->recordSelectSearchColumns(['name', 'email'])
+//                    ->recordTitle(fn($record) => $record->name . " - " . $record->email)
+//                    ->preloadRecordSelect()
+//                    ->recordSelectOptionsQuery(fn($query) =>
+//                    $query->whereDoesntHave('teachingCourses', fn($q) => $q
+//                        ->where('courses.id', $this->getOwnerRecord()->id)
+//                    ))
 //                    ->action(function (array $data) {
 //                        try {
 //                            // default attach behavior:

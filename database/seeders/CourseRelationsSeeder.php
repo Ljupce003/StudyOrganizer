@@ -28,9 +28,12 @@ class CourseRelationsSeeder extends Seeder
         foreach ($courses as $course) {
 
             // Attach 1–2 professors per course
-            $course->professors()->sync(
+            $course->professors()->syncWithPivotValues(
                 $professors->random(rand(1, min(2, $professors->count())))
-                    ->pluck('id')
+                    ->pluck('id'),[
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
             );
 
             // Attach 2–5 students per course
@@ -40,6 +43,8 @@ class CourseRelationsSeeder extends Seeder
                 [
                     'status' => StudentCourseStatus::ENROLLED->value,
                     'enrolled_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now()
                 ]
             );
         }

@@ -97,7 +97,7 @@ class StudentsRelationManager extends RelationManager
                         'status' => $record->pivot?->status,
                         'enrolled_at' => $record->pivot?->enrolled_at,
                     ])
-                    ->form([
+                    ->schema([
                         Select::make('status')
                             ->options(StudentCourseStatus::class)
                             ->required(),
