@@ -22,6 +22,7 @@ class Course extends Model
         "year",
         "semester",
         "is_active",
+        "created_by"
     ];
 
     public function students(): BelongsToMany
