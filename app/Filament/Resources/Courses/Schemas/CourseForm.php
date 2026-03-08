@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Courses\Schemas;
 
+use App\Enums\SemesterType;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
@@ -27,7 +29,8 @@ class CourseForm
                 TextInput::make('year')
                     ->required()
                     ->numeric(),
-                TextInput::make('semester')
+                Select::make('semester')
+                    ->options(SemesterType::class)
                     ->required(),
                 Toggle::make('is_active')
                     ->required(),

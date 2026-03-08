@@ -23,6 +23,13 @@
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
+
+                    @can('admin')
+                        <a href="/admin" class="inline-flex items-center px-4 py-2 text-gray-500 border border-gray-300 rounded-md text-sm font-medium hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition ease-in-out duration-150 me-3">
+                            Admin Page
+                        </a>
+                    @endcan
+
                     <!-- Settings Dropdown -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -126,6 +133,13 @@
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
+
+                @can('admin')
+                    <x-responsive-nav-link :href="'/admin'">
+                        Admin Page
+                    </x-responsive-nav-link>
+                @endcan
+
             @endauth
         </div>
 
