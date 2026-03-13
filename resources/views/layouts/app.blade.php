@@ -18,7 +18,7 @@
 
 </head>
 <body class="font-sans antialiased">
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gray-100 flex flex-col">
     @include('layouts.navigation')
 
     @isset($header)
@@ -29,7 +29,7 @@
         </header>
     @endisset
 
-    <main>
+    <main class="flex-grow">
         {{ $slot }}
     </main>
 
