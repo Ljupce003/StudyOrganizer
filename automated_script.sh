@@ -209,6 +209,11 @@ server {
     root ${APP_DIR}/public;
     index index.php;
 
+    # Global CORS headers for all responses
+    add_header 'Access-Control-Allow-Origin' 'https://ljupchoangelovski.com' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' '*' always;
+
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
