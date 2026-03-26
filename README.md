@@ -17,6 +17,11 @@ to ensure secure and controlled access to resources.
 This project was developed as an advanced student project with a focus on clean architecture, security, and
 production-style deployment practices.
 
+### Hosting
+
+The web app is hosted on an EC2 instance on AWS on the following link:
+- https://studyorganizer.ljupchoangelovski.com
+
 ---
 
 ## Purpose
