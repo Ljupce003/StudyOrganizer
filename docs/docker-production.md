@@ -15,7 +15,7 @@ This guide does not transfer an existing installation's data automatically.
 
 | Proxy installation | Compose files | Proxy upstream |
 | --- | --- | --- |
-| Nginx installed on the VM | prod + native | `http://127.0.0.1:8080` |
+| Nginx installed on the VM | prod + native | `http://127.0.0.1:3060` |
 | Nginx in Docker | prod + proxy | `http://studyorganizer-web:80` on `web-proxy` |
 
 Use exactly one proxy override. The base file publishes no ports. PostgreSQL
@@ -141,7 +141,7 @@ See [Compose startup order](https://docs.docker.com/compose/how-tos/startup-orde
 For native Nginx, check the backend on the VM:
 
 ```bash
-curl --fail http://127.0.0.1:8080/up
+curl --fail http://127.0.0.1:3060/up
 ```
 
 If you change `STUDYORGANIZER_HTTP_PORT`, change
