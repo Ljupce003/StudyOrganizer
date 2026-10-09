@@ -1,0 +1,99 @@
+# Add exactly one of docker-compose.native.yml or docker-compose.proxy.yml.
+name: studyorganizer-production
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-app: &app
+  image: ${APP_IMAGE:?Set APP_IMAGE in .env.production}
+  env_file: .env.production
+  environment:
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_KEY: ${APP_KEY:?Set a permanent APP_KEY in .env.production}
+    APP_URL: ${APP_URL:?Set the public HTTPS APP_URL}
+    TRUSTED_PROXIES: ${TRUSTED_PROXIES:?Set the trusted proxy IPs or CIDRs}
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_DATABASE: ${DB_DATABASE:?Set DB_DATABASE}
+    DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME}
+    DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    DB_SSLMODE: disable
+    LOG_CHANNEL: stderr
+    SESSION_DRIVER: database
+    SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+    CACHE_STORE: database
+    QUEUE_CONNECTION: database
+  volumes:
+    - app_storage:/var/www/html/storage
+  init: true
+  logging: *logging
+  stop_grace_period: 90s
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    # Uses a new production volume; import an older DB with a logical dump.
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    stop_grace_period: 60s
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:?Set DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME:?Set DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # Run explicitly before each deployment; never mutate a DB on web startup.
+  migrate:
+    <<: *app
+    profiles: [tools]
+    restart: "no"
+    command: ["php", "artisan", "migrate", "--force"]
+
+  web:
+    <<: *app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  worker:
+    <<: *app
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=60", "--max-time=3600"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+  scheduler:
+    <<: *app
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  app_storage:

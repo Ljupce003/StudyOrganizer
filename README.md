@@ -109,6 +109,12 @@ The project emphasizes understanding how backend systems work beyond basic CRUD 
 
 ## Deployment & Infrastructure
 
+For container deployment behind the shared Nginx proxy, follow
+**[the production Docker guide](docs/docker-production.md)**. It covers native
+Nginx and Docker Nginx, image publishing, migrations, persistent files, backups,
+and HTTPS forwarding. The existing `docker-compose.yaml` remains a development
+database setup; production uses `docker-compose.prod.yml` explicitly.
+
 The project includes an automation script designed to provision and deploy the application on an AWS EC2 instance.
 
 ### Automated Provisioning Script
@@ -216,5 +222,5 @@ adjustments.
 * Messaging/notification system
 * Activity logs
 * CI/CD pipeline integration
-* Containerized deployment (Docker/Kubernetes)
+* Kubernetes deployment
 * Direct-to-S3 file uploads for large file optimization

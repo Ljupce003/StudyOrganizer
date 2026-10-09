@@ -1,0 +1,15 @@
+# Optional: build locally/on the VM instead of pulling a published image.
+x-build: &build
+  context: .
+  dockerfile: Dockerfile
+  target: runtime
+
+services:
+  web:
+    build: *build
+  migrate:
+    build: *build
+  worker:
+    build: *build
+  scheduler:
+    build: *build

@@ -1,0 +1,12 @@
+# Docker Nginx reaches the HTTP server via its existing network alias.
+services:
+  web:
+    networks:
+      default: {}
+      web-proxy:
+        aliases: [studyorganizer-web]
+
+networks:
+  web-proxy:
+    external: true
+    name: web-proxy

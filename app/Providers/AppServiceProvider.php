@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Models\Course;
+use Illuminate\Foundation\Events\DiagnosingHealth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,7 +25,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Event::listen(DiagnosingHealth::class, function (): void {
+            // /up must fail when the database is unavailable, too.
+            DB::select('SELECT 1');
+        });
         View::composer('*', function ($view) {
             $user = auth()->user();
 
