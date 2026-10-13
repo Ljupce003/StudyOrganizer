@@ -17,10 +17,15 @@ to ensure secure and controlled access to resources.
 This project was developed as an advanced student project with a focus on clean architecture, security, and
 production-style deployment practices.
 
-### Hosting
+### Developer guides
 
-The web app is hosted on an EC2 instance on AWS on the following link:
-- https://studyorganizer.ljupchoangelovski.com
+- [Local setup, administrator accounts, and testing](docs/development.md)
+- [Production Docker deployment and troubleshooting](docs/docker-production.md)
+- [Docker image publishing and GitHub releases](docs/releasing.md)
+- [Changelog](CHANGELOG.md)
+
+Deployment domains, account details, and credentials are configured locally.
+The examples in these guides use placeholder domains and addresses.
 
 ---
 
@@ -44,6 +49,7 @@ The project emphasizes understanding how backend systems work beyond basic CRUD 
 ### Authentication & Roles
 
 * Laravel Breeze authentication
+* Interactive administrator creation with `php artisan admin:create`
 * Role enum system (STUDENT, PROFESSOR, ADMIN)
 * Role-based access restrictions
 * Gates and Policies for model-level authorization
@@ -115,7 +121,9 @@ Nginx and Docker Nginx, image publishing, migrations, persistent files, backups,
 and HTTPS forwarding. The existing `docker-compose.yaml` remains a development
 database setup; production uses `docker-compose.prod.yml` explicitly.
 
-The project includes an automation script designed to provision and deploy the application on an AWS EC2 instance.
+The project also includes a legacy automation script for provisioning a native
+PHP-FPM installation on an AWS EC2 instance. Use the production Docker guide
+for deployment behind an existing shared Nginx proxy.
 
 ### Automated Provisioning Script
 
@@ -164,21 +172,17 @@ A dedicated automation script is included to:
 * Run migrations
 * Optionally seed the database
 
-### SQLite → PostgreSQL Transfer Script
+### Moving existing data
 
-An additional script is provided to automate data transfer from SQLite to PostgreSQL.
+Changing the database connection and running Laravel migrations does not copy
+existing data. Transfer PostgreSQL data using a logical dump/restore; SQLite
+requires a separately verified data conversion. Preserve the existing Laravel
+key and transfer private uploads as well as public files.
 
-The script:
-
-* Connects to SQLite
-* Connects to PostgreSQL via PDO
-* Migrates table data safely
-* Preserves relational integrity
-* Ensures type compatibility
-* Validates connection before migration
-
-This allows easy transition from local development (SQLite) to production (PostgreSQL or RDS) without manual data
-export/import.
+The legacy `database_transition_script_to_postgres_rds.sh` uses
+`migrate:fresh --force`, which drops existing tables. It provisions an empty
+database and is not a data transfer script. Do not run it against a database
+whose data you need to preserve. See the migration section of the production guide.
 
 ---
 

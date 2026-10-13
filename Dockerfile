@@ -36,7 +36,8 @@ COPY --from=dependencies /var/www/html/vendor ./vendor
 RUN npm run build
 
 FROM php-base AS runtime
-ENV APP_ENV=production APP_DEBUG=false LOG_CHANNEL=stderr
+ENV APP_ENV=production APP_DEBUG=false LOG_CHANNEL=stderr \
+    XDG_CONFIG_HOME=/var/www/html/storage/app/private/.config
 COPY --from=dependencies /var/www/html /var/www/html
 COPY --from=assets /app/public/build ./public/build
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf

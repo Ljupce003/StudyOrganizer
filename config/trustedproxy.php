@@ -3,8 +3,9 @@
 $trustedProxies = trim((string) env('TRUSTED_PROXIES', ''));
 
 return [
-    // Keep this in config so proxy trust also works with artisan config:cache.
-    'trusted_proxies' => $trustedProxies === '*'
+    // Laravel's TrustProxies middleware reads this after HTTP bootstrapping.
+    // Keeping it in config also supports artisan config:cache.
+    'proxies' => $trustedProxies === '*'
         ? '*'
         : array_values(array_filter(array_map('trim', explode(',', $trustedProxies)))),
 ];

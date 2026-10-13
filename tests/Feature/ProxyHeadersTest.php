@@ -10,7 +10,7 @@ class ProxyHeadersTest extends TestCase
 {
     public function test_trusted_proxy_preserves_public_https_urls_and_client_ip(): void
     {
-        config(['proxy.trusted_proxies' => ['172.20.0.2']]);
+        config(['trustedproxy.proxies' => ['172.20.0.2']]);
         $this->registerProbe();
 
         $this->withServerVariables($this->forwardedRequest('172.20.0.2'))
@@ -26,7 +26,7 @@ class ProxyHeadersTest extends TestCase
 
     public function test_untrusted_request_cannot_spoof_forwarding_headers(): void
     {
-        config(['proxy.trusted_proxies' => ['172.20.0.2']]);
+        config(['trustedproxy.proxies' => ['172.20.0.2']]);
         $this->registerProbe();
 
         $this->withServerVariables($this->forwardedRequest('203.0.113.99'))

@@ -11,6 +11,38 @@ keeps the new production database and volume separate from development.
 Do not override this with the development project's `COMPOSE_PROJECT_NAME`.
 This guide does not transfer an existing installation's data automatically.
 
+All domains, image namespaces, usernames, and email addresses below are examples.
+Keep real deployment settings and secrets in ignored environment files. Follow
+[the development guide](development.md) for local setup and
+[the release guide](releasing.md) for publishing a versioned image and GitHub release.
+
+## Compose files and processes
+
+| File | Purpose |
+| --- | --- |
+| `docker-compose.yaml` | Original development PostgreSQL service; reads `.env`. |
+| `docker-compose.prod.yml` | Production services, persistent volumes, environment, and health checks. |
+| `docker-compose.native.yml` | Adds the web mapping `127.0.0.1:3060:80` for host-installed Nginx. |
+| `docker-compose.proxy.yml` | Adds the existing `web-proxy` network and `studyorganizer-web` alias for Docker Nginx. |
+| `docker-compose.build.yml` | Optional instructions to build the application image from the checkout. |
+
+Multiple `-f` flags merge these files into one deployment. Use `prod` plus
+exactly one of `native` or `proxy`; add `build` only when building on that host.
+Plain `docker compose up` selects the development database file.
+
+| Service | Process | Lifetime |
+| --- | --- | --- |
+| `web` | PHP/Apache handles browser requests. | Runs continuously. |
+| `postgres` | Stores application data, sessions, cache, and queued jobs. | Runs continuously. |
+| `migrate` | `php artisan migrate --force` applies pending database changes. | Explicit one-off command. |
+| `worker` | `php artisan queue:work` processes queued jobs. | Optional continuous process. |
+| `scheduler` | `php artisan schedule:work` checks timed Laravel tasks. | Optional continuous process. |
+
+All application processes reuse one image. `dc run --rm migrate` starts a
+temporary container and removes it on completion; database changes remain in
+PostgreSQL's volume. Workers are useful only for code that dispatches jobs, and
+there are currently no scheduled application tasks. Start them when needed.
+
 ## Choose the proxy mode
 
 | Proxy installation | Compose files | Proxy upstream |
@@ -18,14 +50,16 @@ This guide does not transfer an existing installation's data automatically.
 | Nginx installed on the VM | prod + native | `http://127.0.0.1:3060` |
 | Nginx in Docker | prod + proxy | `http://studyorganizer-web:80` on `web-proxy` |
 
-Use exactly one proxy override. The base file publishes no ports. PostgreSQL
-has no host port, and only the HTTP service joins `web-proxy`. Native mode binds
-the HTTP port to loopback; ports 80 and 443 remain available for the shared proxy.
+Use exactly one proxy override. PostgreSQL is available on the VM at
+`127.0.0.1:3062` (configurable with `STUDYORGANIZER_DB_PORT`). Application
+containers connect to `postgres:5432`; keep `DB_PORT=5432` in their environment.
+Only the HTTP service joins `web-proxy`. Native mode binds the HTTP port to
+loopback; ports 80 and 443 remain available for the shared proxy.
 
 ## 1. Prepare the environment and images
 
 ```bash
-cp .env.production.example .env.production
+test -f .env.production || cp .env.production.example .env.production
 chmod 600 .env.production
 nano .env.production
 ```
@@ -52,7 +86,7 @@ Build and publish an image from your development machine:
 
 ```bash
 docker buildx build --platform linux/amd64 \
-  --target runtime -t your-dockerhub-user/studyorganizer:1.0.0 --push .
+  --target runtime -t your-dockerhub-user/studyorganizer:1.0.3 --push .
 ```
 
 Use `linux/arm64` for an ARM VM, or
@@ -127,9 +161,14 @@ but allows any peer that can reach the app to supply forwarding headers.
 dc config --quiet
 dc pull
 dc up -d --wait postgres
-dc run --rm migrate
-dc up -d --wait web worker scheduler
+dc run --rm migrate && dc up -d --wait web
 dc ps
+```
+
+Enable background processes when the application uses them:
+
+```bash
+dc up -d worker scheduler
 ```
 
 Run the migration step successfully before starting the web app or workers.
@@ -153,6 +192,16 @@ already matches the existing proxy scripts.
 For native Nginx, from the nginx-reverse-proxy checkout, set the real
 `ACME_EMAIL` and `STUDYORGANIZER_DOMAIN` in `.env.native`, then:
 
+```dotenv
+STUDYORGANIZER_DOMAIN=studyorganizer.example.com
+STUDYORGANIZER_UPSTREAM=http://127.0.0.1:3060
+```
+
+Environment files are separate: the proxy's native scripts read `.env.native`,
+its Docker workflow reads `.env`, and this application's production Compose
+reads `.env.production`. Nginx reads the generated `.conf` files. Editing an
+environment file requires rerunning the appropriate config script.
+
 ```bash
 sudo ./scripts/native/issue-studyorganizer-certificate.sh
 sudo ./scripts/native/generate-studyorganizer-conf.sh --install
@@ -169,9 +218,9 @@ inheritance. This changes only Docker Nginx; native Nginx already uses 120s.
 From a client machine, verify the public origin:
 
 ```bash
-curl --fail https://studyorganizer.ljupchoangelovski.com/up
-curl -sSI https://studyorganizer.ljupchoangelovski.com/login
-curl -sSI https://studyorganizer.ljupchoangelovski.com/dashboard
+curl --fail https://studyorganizer.example.com/up
+curl -sSI https://studyorganizer.example.com/login
+curl -sSI https://studyorganizer.example.com/dashboard
 ```
 
 Confirm the login response sets a cookie with `Secure`, and the unauthenticated
@@ -185,10 +234,57 @@ and 10 MiB per submission attachment; the container setup retains those rules.
 Only `storage/app/public` is publicly linked. Course materials remain private
 and are delivered through the application's authorized controllers.
 
+## Create an administrator
+
+From the deployment checkout, use the same `dc` helper:
+
+```bash
+dc exec --user www-data web php artisan admin:create
+```
+
+Enter the name, email, password, and password confirmation interactively. The
+command assigns the admin role and hashes the password automatically. Passwords
+must have at least 12 characters and are hidden while you type. The command does
+not accept a password flag, so passwords stay out of shell history.
+
+You can prefill the name and email while keeping password entry interactive:
+
+```bash
+dc exec --user www-data web php artisan admin:create \
+  --name="Admin User" --email="admin@example.com"
+```
+
+The command rejects duplicate email addresses without changing the existing
+account. To promote an existing account instead, use Tinker:
+
+```bash
+dc exec --user www-data -e XDG_CONFIG_HOME=/tmp web php artisan tinker
+```
+
+Replace the email below with the account's actual email:
+
+```php
+$user = App\Models\User::where('email', 'your-email@example.com')->firstOrFail();
+$user->role = App\Enums\UserRole::ADMIN;
+$user->save();
+```
+
+Log in through `/login`; administrators are redirected to `/admin`. The User model
+implements Filament's production access contract and allows only the admin role
+to access the panel. Students and professors receive HTTP 403.
+
+The runtime image sets `XDG_CONFIG_HOME` under writable private storage for
+Tinker's history/configuration. The explicit `/tmp` setting above also works
+with older images where `/var/www/.config/psysh` is not writable by `www-data`.
+
+Do not use the general database seeder to create a production administrator:
+it also creates demonstration users, courses, assignments, and submissions.
+
 ## Updates and maintenance
 
 Before an update, take a database and file backup. Set a new `APP_IMAGE` tag,
-then use the same `dc` function:
+then use the same `dc` function. Stop/recreate the worker and scheduler only if
+they were enabled for this installation; omit those lines otherwise:
 
 ```bash
 dc pull
@@ -264,6 +360,98 @@ changes connection settings and runs migrations; it is not a substitute for
 verifying the transferred data. Keep the old instance and backup until users,
 courses, submissions, and file downloads have been checked in the new deployment.
 
+## Troubleshooting
+
+### HTTP 403 on the admin panel
+
+Check the deployed code and whether any administrators exist, without printing
+account emails or credentials:
+
+```bash
+dc exec -T --user www-data -e XDG_CONFIG_HOME=/tmp web php artisan tinker \
+  --execute='dump(["has_filament_contract" => is_subclass_of(App\Models\User::class, Filament\Models\Contracts\FilamentUser::class), "admin_count" => App\Models\User::where("role", "admin")->count()]);'
+```
+
+`has_filament_contract` must be true. If false, the running image lacks the
+production User-model fix; rebuild/publish and recreate the web container.
+`admin_count=0` means no account has the required role. Use `admin:create` for a
+new account or the existing-user promotion procedure above, then log in again.
+If admins exist, verify you are signing in with an admin account. Keep the app
+in production mode; changing `APP_ENV` is not an authorization fix.
+
+### Tinker cannot write to /var/www/.config/psysh
+
+Older images may try to write history or project-trust settings outside the
+app user's writable directories. Use `-e XDG_CONFIG_HOME=/tmp` as shown above.
+The current image defaults this path to private writable storage.
+`Restricted Mode` may appear for a noninteractive invocation; the diagnostic
+expressions still run. The dedicated `admin:create` command does not use Tinker.
+
+### Artisan command not found or stale application behavior
+
+Verify the command shipped inside the running image:
+
+```bash
+dc exec --user www-data web php artisan help admin:create
+dc images web
+```
+
+Git pulls do not change the code already packaged inside a running container.
+Build/publish a new image, set its version in `.env.production`, then pull and
+recreate the service. Container startup rebuilds Laravel config from its runtime
+environment; OPcache is refreshed by recreation.
+
+### Class config does not exist during /up
+
+This error indicates an older image that calls `config()` while configuring the
+HTTP kernel before configuration has loaded. The current bootstrap only sets
+header constants; the framework loads trusted proxy addresses from
+`config/trustedproxy.php` during request handling. Deploy the fixed image.
+
+### Compose helper and terminal commands
+
+Run each command separately from the application checkout. `dc images web` and
+`dc exec ...` are different commands; combining them on one line without a
+separator produces an invalid option error. The `dc` shell function must be
+defined again after opening a new SSH session or rebooting the VM.
+
+### VM lag, memory, and Docker disk usage
+
+Inspect the host and container usage before attributing lag to a single service:
+
+```bash
+nproc
+free -h
+docker stats --no-stream
+vmstat 1 5
+df -h
+docker system df
+```
+
+Use available memory rather than free memory alone; Linux can reclaim part of
+its cache. High `wa` in `top`/`vmstat` indicates I/O waiting. Image extraction can
+cause temporary I/O load. A VM with very little RAM may struggle with several
+applications/databases even when CPU usage is low. Leave unused workers and
+schedulers stopped, and build images off the deployment host when possible.
+
+For a normal reboot:
+
+```bash
+sudo reboot
+```
+
+SSH disconnects while the VM restarts. After reconnecting:
+
+```bash
+sudo systemctl status docker nginx --no-pager
+docker ps
+```
+
+Running containers with `restart: unless-stopped` return when Docker starts at
+boot; deliberately stopped containers stay stopped. Rebooting does not remove
+unused images or add memory. Review Docker disk usage before cleanup and retain
+the database/upload volumes; `dc down -v` deletes them.
+
 ## Validation
 
 `dc config --quiet` checks the selected Compose configuration without starting
@@ -272,6 +460,7 @@ against a disposable database, then check `/up`, HTTPS redirects, login, assets,
 and file persistence across recreation before enabling production traffic.
 
 PHP regression tests for proxy header trust are in
-`tests/Feature/ProxyHeadersTest.php`. With local development dependencies
-installed, run `php artisan test --filter=ProxyHeadersTest`. Production images
-omit development packages and test files.
+`tests/Feature/ProxyHeadersTest.php`, with a pre-bootstrap HTTP kernel regression
+in `tests/Unit/HttpBootstrapTest.php`. With local development dependencies
+installed, run `php artisan test --filter='CreateAdminCommandTest|AdminPanelAccessTest|ProxyHeadersTest|HttpBootstrapTest'`.
+Production images omit development packages and test files.
